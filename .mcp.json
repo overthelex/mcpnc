@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "secondlayer-prod": {
+      "type": "sse",
+      "url": "https://mcp.legal.org.ua/api/v1/sse",
+      "headers": {
+        "Authorization": "Bearer sl_5825773251e85e10298cc8bea49fabd49995d6076955810f3886ee101be29473"
+      }
+    },
+    "nextcloud": {
+      "command": "node",
+      "args": ["/home/vovkes/mcpnc/dist/index.js"],
+      "env": {
+        "NEXTCLOUD_URL": "https://nextcloud.legal.org.ua",
+        "NEXTCLOUD_USER": "vladimir",
+        "NEXTCLOUD_PASSWORD": "C2IIOYYOgOuxAapSKl542VCigYcT3j9Qs7uShOrVXaWDzBExEZtP8liIXfhRDpuhCfT9F4Oe"
+      }
+    }
+  }
+}
