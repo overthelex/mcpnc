@@ -299,6 +299,98 @@ server.tool(
   }
 );
 
+// ─── Calendar tools ───
+
+server.tool("calendar_list", "List all Nextcloud calendars", {}, async () => {
+  const result = await nc.listCalendars();
+  return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+});
+
+server.tool(
+  "calendar_events_list",
+  "List events in a Nextcloud calendar. Dates in CalDAV format: 20260101T000000Z",
+  {
+    calendarId: z.string().describe("Calendar ID (e.g. 'personal', 'work')"),
+    from: z.string().optional().describe("Start date filter (CalDAV format: 20260101T000000Z)"),
+    to: z.string().optional().describe("End date filter (CalDAV format: 20261231T235959Z)"),
+  },
+  async ({ calendarId, from, to }) => {
+    const result = await nc.listEvents(calendarId, from, to);
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+  }
+);
+
+server.tool(
+  "calendar_event_get",
+  "Get a specific calendar event by UID",
+  {
+    calendarId: z.string().describe("Calendar ID"),
+    eventUid: z.string().describe("Event UID"),
+  },
+  async ({ calendarId, eventUid }) => {
+    const result = await nc.getEvent(calendarId, eventUid);
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+  }
+);
+
+server.tool(
+  "calendar_event_create",
+  "Create a new calendar event. Use CalDAV date format: 20260326T100000Z",
+  {
+    calendarId: z.string().describe("Calendar ID (e.g. 'personal')"),
+    summary: z.string().describe("Event title"),
+    dtstart: z.string().describe("Start date-time (CalDAV format: 20260326T100000Z)"),
+    dtend: z.string().describe("End date-time (CalDAV format: 20260326T110000Z)"),
+    description: z.string().optional().describe("Event description"),
+    location: z.string().optional().describe("Event location"),
+    alarms: z.array(z.object({
+      trigger: z.string().describe("Alarm trigger (e.g. '-PT1H' for 1 hour before, '-PT30M' for 30 min before, '-P1D' for 1 day before)"),
+      action: z.string().optional().describe("Alarm action: DISPLAY (default) or EMAIL"),
+      description: z.string().optional().describe("Alarm description text"),
+    })).optional().describe("Reminders/alarms for the event"),
+  },
+  async ({ calendarId, summary, dtstart, dtend, description, location, alarms }) => {
+    const result = await nc.createEvent(calendarId, summary, dtstart, dtend, { description, location, alarms });
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+  }
+);
+
+server.tool(
+  "calendar_event_update",
+  "Update an existing calendar event",
+  {
+    calendarId: z.string().describe("Calendar ID"),
+    eventUid: z.string().describe("Event UID"),
+    summary: z.string().optional().describe("New event title"),
+    dtstart: z.string().optional().describe("New start date-time (CalDAV format)"),
+    dtend: z.string().optional().describe("New end date-time (CalDAV format)"),
+    description: z.string().optional().describe("New description"),
+    location: z.string().optional().describe("New location"),
+    alarms: z.array(z.object({
+      trigger: z.string().describe("Alarm trigger (e.g. '-PT1H', '-PT30M', '-P1D')"),
+      action: z.string().optional().describe("DISPLAY (default) or EMAIL"),
+      description: z.string().optional().describe("Alarm description text"),
+    })).optional().describe("Replace reminders (pass [] to remove all)"),
+  },
+  async ({ calendarId, eventUid, ...data }) => {
+    const result = await nc.updateEvent(calendarId, eventUid, data);
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+  }
+);
+
+server.tool(
+  "calendar_event_delete",
+  "Delete a calendar event",
+  {
+    calendarId: z.string().describe("Calendar ID"),
+    eventUid: z.string().describe("Event UID"),
+  },
+  async ({ calendarId, eventUid }) => {
+    const result = await nc.deleteEvent(calendarId, eventUid);
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+  }
+);
+
 // ─── Start server ───
 
 async function main() {
